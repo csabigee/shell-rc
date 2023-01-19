@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "racecar.h"
+#include "controller.h"
 
 #include <QMainWindow>
 #include <QGridLayout>
@@ -15,6 +16,8 @@
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QJoysticks.h>
 
+#include "led.h"
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -24,23 +27,21 @@ public:
     ~MainWindow();
 
 private:
-    QListWidget* lw;
+    QListWidget* controllerList;
+    QListWidget* carList;
+
     QJoysticks* joystickController;
+
     QGridLayout* lo_main;
     QPushButton* pb_scan;
-    QGridLayout* lo_controllers;
-    QGridLayout* lo_cars;
-    QGroupBox* gb_controllers;
-    QGroupBox* gb_cars;
-    QList<QLabel*> l_controllers;
-    QList<QLabel*> l_cars;
-    QList<QProgressBar*> pb_cars;
+
+    QList<Controller*> controllers;
+    QList<RaceCar*> racecars;
+
+    QList<QListWidgetItem*> lw_items_controllers;
+    QList<QListWidgetItem*> lw_items_cars;
 
     QBluetoothDeviceDiscoveryAgent *bleAgent;
-    QList<QBluetoothDeviceInfo> bleDeviceList;
-
-    QList<RaceCar*> racecars;
-    //QList<QGamepad*> controllers;
 
 private slots:
     void startScan();
@@ -50,6 +51,7 @@ private slots:
 
     void axis_slot(int,int,qreal);
     void button_slot(int,int,bool);
+    void reconnectControls(const QModelIndexList &indexes);
 
 };
 #endif // MAINWINDOW_H

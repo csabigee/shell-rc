@@ -11,11 +11,15 @@ CONFIG += c++11
 include ($$PWD/qjoysticks/QJoysticks.pri)
 
 SOURCES += \
+    controller.cpp \
+    led.cpp \
     main.cpp \
     mainwindow.cpp \
     racecar.cpp
 
 HEADERS += \
+    controller.h \
+    led.h \
     mainwindow.h \
     racecar.h
 

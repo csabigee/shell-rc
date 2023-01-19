@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "controller.h"
 
 #include <QDebug>
 #include <QThread>
@@ -11,47 +12,36 @@
 #include <QListWidget>
 
 
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    lw = new QListWidget();
-//    for(int i = 1; i < 10; ++i)
-//        lw->addItem(new QListWidgetItem(QString("Item %1").arg(i)));
-    lw->setDragDropMode(QAbstractItemView::InternalMove);
+    controllerList = new QListWidget();
+    controllerList->setViewMode(QListView::ListMode);
+    controllerList->setResizeMode(QListView::Fixed);
 
-    //lw.show();
+    carList = new QListWidget();
+    carList->setDragDropMode(QAbstractItemView::InternalMove);
+    carList->setViewMode(QListView::ListMode);
+    carList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    carList->setDragDropMode(QAbstractItemView::InternalMove);
+    carList->setDefaultDropAction(Qt::TargetMoveAction);
+    #if QT_VERSION >= QT_VERSION_CHECK(5,10,0)
+        carList->setMovement(QListView::Free);
+    #endif
+
 
     joystickController=QJoysticks::getInstance();
+
+    /* enable virtual controller for debug purposes */
     joystickController->setVirtualJoystickRange(1);
     joystickController->setVirtualJoystickEnabled(true);
     joystickController->setVirtualJoystickAxisSensibility(0.7);
+
     lo_main = new QGridLayout();
-    lo_controllers = new QGridLayout();
-    lo_cars = new QGridLayout();
-    gb_controllers = new QGroupBox("controllers");
-    gb_cars = new QGroupBox("cars");
-    pb_scan = new QPushButton("Scan");
-
-    gb_controllers->setLayout(lo_controllers);
-    gb_cars->setLayout(lo_cars);
+    pb_scan = new QPushButton("Rescan");
     lo_main->addWidget(pb_scan,1,1,1,2);
-    //lo_main->addWidget(gb_controllers,2,1);
-    //lo_main->addWidget(gb_cars,2,2);
-    lo_main->addWidget(lw,3,1);
-
-    QListWidgetItem *test = new QListWidgetItem;
-    lw->setViewMode(QListView::ListMode);
-    lw->addItem(test);
-    lw->setItemWidget(test,gb_controllers);
-    test->setSizeHint(QSize(232,97));
-
-
-    QListWidgetItem *test2 = new QListWidgetItem;
-    lw->setViewMode(QListView::ListMode);
-    lw->addItem(test2);
-    lw->setItemWidget(test2,gb_cars);
-    test2->setSizeHint(QSize(232,97));
+    lo_main->addWidget(controllerList,2,1);
+    lo_main->addWidget(carList,2,2);
 
 
     connect(pb_scan,&QPushButton::released,this,&MainWindow::startScan);
@@ -62,15 +52,17 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(central);
 
     bleAgent = new QBluetoothDeviceDiscoveryAgent();
-    bleAgent->setLowEnergyDiscoveryTimeout(5000);
+    bleAgent->setLowEnergyDiscoveryTimeout(2000);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &MainWindow::deviceDiscovered);
     connect(bleAgent, qOverload<QBluetoothDeviceDiscoveryAgent::Error>(&QBluetoothDeviceDiscoveryAgent::error), this, &MainWindow::deviceScanError);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &MainWindow::deviceScanFinished);
+
+    connect(controllerList, &QListView::indexesMoved, this, &MainWindow::reconnectControls);
 }
 
 void MainWindow::startScan()
 {
-    /* disconnect everything */
+    /* disconnect everything, destroy every controller and racecar */
 
     /* scan cars */
     bleAgent->start();
@@ -87,8 +79,12 @@ void MainWindow::startScan()
                 controller_name="Generic controller";
             }
             qDebug() << "found new controller: " << controller << controller_name;
-            l_controllers.append(new QLabel(controller_name));
-            lo_controllers->addWidget(l_controllers.back(),l_controllers.size(),1);
+            controllers.append(new Controller(controller_name));
+            lw_items_controllers.append(new QListWidgetItem);
+            lw_items_controllers.last()->setSizeHint(QSize(controllers.last()->sizeHint().width(),50));
+            lw_items_controllers.last()->setFlags(lw_items_controllers.last()->flags() & ~Qt::ItemIsSelectable);
+            controllerList->addItem(lw_items_controllers.last());
+            controllerList->setItemWidget(lw_items_controllers.last(),controllers.last());
         }
     }
 }
@@ -102,15 +98,16 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo & device)
             || device.name().startsWith(QStringLiteral("SL-488 GTE"))) {
         qDebug() << "Found new car:" << device.name() << '(' << device.address().toString() << ')';
 
-        bleDeviceList.append(device);
-        l_cars.append(new QLabel(device.name() + "(" + device.address().toString() + ")"));
-        pb_cars.append(new QProgressBar);
-        lo_cars->addWidget(l_cars.back(),l_cars.size(),1);
-        lo_cars->addWidget(pb_cars.back(),pb_cars.size(),2);
 
         /* connect to the device */
         racecars.append(new RaceCar(device, this));
         racecars.last()->connectToDevice();
+
+        lw_items_cars.append(new QListWidgetItem);
+        lw_items_cars.last()->setSizeHint(QSize(racecars.last()->sizeHint().width(),50));
+
+        carList->addItem(lw_items_cars.last());
+        carList->setItemWidget(lw_items_cars.last(),racecars.last());
     }
 }
 
@@ -121,7 +118,6 @@ void MainWindow::deviceScanFinished()
 
     connect(joystickController,&QJoysticks::axisChanged, this, &MainWindow::axis_slot);
     connect(joystickController,&QJoysticks::buttonChanged, this, &MainWindow::button_slot);
-    connect(racecars[0],&RaceCar::battery_changed,pb_cars[0],&QProgressBar::setValue);
 }
 
 void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -152,42 +148,51 @@ void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
 
 void MainWindow::axis_slot(int js,int axis,qreal value)
 {
+    controllers[js]->flashIndicator();
     qDebug() << "axis " << axis << "value" << value;
     if(axis==1){
-        racecars[0]->setThrottle(-1*value);
+        racecars[js]->setThrottle(-1*value);
     }
     if(axis==2)
-        racecars[0]->setSteer(value);
-    }
+        racecars[js]->setSteer(value);
+}
 
 void MainWindow::button_slot(int js,int button, bool pressed)
 {
-    qDebug() << "button" << button << pressed;
+    controllers[js]->flashIndicator();
+    qDebug() << "js" << js << " button" << button << pressed;
     if(button==1){
         if(pressed){
-            racecars[0]->setSteer(1);
+            racecars[js]->setSteer(1);
         } else{
-            racecars[0]->setSteer(0);
+            racecars[js]->setSteer(0);
         }
     }
     if(button==2){
         if(pressed){
-            racecars[0]->setSteer(-1);
+            racecars[js]->setSteer(-1);
         } else{
-            racecars[0]->setSteer(0);
+            racecars[js]->setSteer(0);
         }
     }
     if(button==3){
         if(pressed){
-            racecars[0]->toggleDirectDrive();
+            racecars[js]->toggleDirectDrive();
         }
     }
     if(button==11){
-        racecars[0]->setLamp(pressed);
+        racecars[js]->setLamp(pressed);
     }
     if(button==12){
-        racecars[0]->setTurbo(pressed);
+        racecars[js]->setTurbo(pressed);
     }
+}
+
+void MainWindow::reconnectControls(const QModelIndexList &indexes)
+{
+    qDebug() << "racecar indexes changed!";
+    for(int i = 0; i < indexes.size(); i++)
+        qDebug() << indexes.at(i);
 }
 
 MainWindow::~MainWindow()

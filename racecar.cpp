@@ -1,3 +1,8 @@
+#include <QWidget>
+#include <QGridLayout>
+#include <QLabel>
+#include <QProgressBar>
+#include <QPushButton>
 #include "racecar.h"
 
 QBluetoothUuid RaceCar::CONTROL_SERVICE_UUID         = QBluetoothUuid(QStringLiteral("0000fff0-0000-1000-8000-00805f9b34fb"));
@@ -5,12 +10,28 @@ QBluetoothUuid RaceCar::BATTERY_SERVICE_UUID         = QBluetoothUuid(QStringLit
 QBluetoothUuid RaceCar::CONTROL_CHARACTERISTICS_UUID = QBluetoothUuid(QStringLiteral("0000fff1-0000-1000-8000-00805f9b34fb"));
 QBluetoothUuid RaceCar::BATTERY_CHARACTERISTICS_UUID = QBluetoothUuid(QStringLiteral("00002a19-0000-1000-8000-00805f9b34fb"));
 
-RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QObject *parent)
-    : QObject{parent}
+RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
+    : QWidget{parent}
 {
+    lo_main = new QGridLayout();
+    l_name = new QLabel(carInfo.name());
+    pb_batery = new QProgressBar;
+    pb_flash = new QPushButton("Flash");
+    lo_main->addWidget(l_name,0,0);
+    lo_main->addWidget(pb_batery,0,1);
+    lo_main->addWidget(pb_flash,0,2);
+    this->setLayout(lo_main);
+
+
     m_bleTimer.setSingleShot(false);
-    m_bleTimer.setInterval(40);
+    m_bleTimer.setInterval(60);
     connect(&m_bleTimer, &QTimer::timeout, this, &RaceCar::send_ctrl);
+
+    flash_num=0;
+    m_flashTimer.setSingleShot(true);
+    m_flashTimer.setInterval(350);
+    connect(&m_flashTimer, &QTimer::timeout, this, &RaceCar::flashLampTo);
+
 
     m_controller = new QLowEnergyController(carInfo);
     m_controller->setRemoteAddressType(QLowEnergyController::RandomAddress);
@@ -20,6 +41,7 @@ RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QObject *parent)
     connect(m_controller, qOverload<QLowEnergyController::Error>(&QLowEnergyController::error), this, &RaceCar::errorReceived);
     connect(m_controller, &QLowEnergyController::serviceDiscovered, this, &RaceCar::serviceDiscovered);
     connect(m_controller, &QLowEnergyController::discoveryFinished, this, &RaceCar::serviceScanDone);
+    connect(pb_flash, &QPushButton::released, this, &RaceCar::flashLamp);
 
     m_controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
 }
@@ -206,7 +228,24 @@ void RaceCar::batteryCharacteristicChanged(const QLowEnergyCharacteristic &info,
                 m_batteryPercentage = value.at(0);
                 qDebug() << "Battery: " << m_batteryPercentage << " %";
                 emit(battery_changed(m_batteryPercentage));
+                pb_batery->setValue(m_batteryPercentage);
             }
         }
+    }
+}
+
+void RaceCar::flashLamp()
+{
+    flash_num=4;
+    m_lamp=true;
+    m_flashTimer.start();
+}
+
+void RaceCar::flashLampTo()
+{
+    m_lamp=!m_lamp;
+    if(flash_num){
+        m_flashTimer.start();
+        flash_num--;
     }
 }
