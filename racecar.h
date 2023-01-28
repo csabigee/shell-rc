@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QLowEnergyController>
 #include <QElapsedTimer>
+#include <QGroupBox>
 
 class RaceCar : public QWidget
 {
@@ -24,10 +25,14 @@ public:
     uint8_t getBattery();
 
 private:
+    QGroupBox* gb_outline;
     QGridLayout* lo_main;
+    QGridLayout* lo_outline;
     QLabel* l_name;
     QProgressBar* pb_batery;
     QPushButton* pb_flash;
+    QPushButton* pb_up;
+    QPushButton* pb_down;
     QTimer m_bleTimer;
     QTimer m_flashTimer;
     uint32_t flash_num;
@@ -52,6 +57,7 @@ private:
 
 signals:
     void battery_changed(uint8_t percentage);
+    void place_change(bool up);
 
 private slots:
     void send_ctrl();
@@ -65,6 +71,7 @@ private slots:
     void batteryCharacteristicChanged(const QLowEnergyCharacteristic &info, const QByteArray &value);
     void flashLamp();
     void flashLampTo();
+    void place_change_pressed();
 
 
 };

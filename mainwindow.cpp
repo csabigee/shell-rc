@@ -15,21 +15,6 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    controllerList = new QListWidget();
-    controllerList->setViewMode(QListView::ListMode);
-    controllerList->setResizeMode(QListView::Fixed);
-
-    carList = new QListWidget();
-    carList->setDragDropMode(QAbstractItemView::InternalMove);
-    carList->setViewMode(QListView::ListMode);
-    carList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    carList->setDragDropMode(QAbstractItemView::InternalMove);
-    carList->setDefaultDropAction(Qt::TargetMoveAction);
-    #if QT_VERSION >= QT_VERSION_CHECK(5,10,0)
-        carList->setMovement(QListView::Free);
-    #endif
-
-
     joystickController=QJoysticks::getInstance();
 
     /* enable virtual controller for debug purposes */
@@ -39,10 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     lo_main = new QGridLayout();
     pb_scan = new QPushButton("Rescan");
-    lo_main->addWidget(pb_scan,1,1,1,2);
-    lo_main->addWidget(controllerList,2,1);
-    lo_main->addWidget(carList,2,2);
-
+    lo_main->addWidget(pb_scan,0,0,1,2);
 
     connect(pb_scan,&QPushButton::released,this,&MainWindow::startScan);
 
@@ -56,8 +38,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &MainWindow::deviceDiscovered);
     connect(bleAgent, qOverload<QBluetoothDeviceDiscoveryAgent::Error>(&QBluetoothDeviceDiscoveryAgent::error), this, &MainWindow::deviceScanError);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &MainWindow::deviceScanFinished);
-
-    connect(controllerList, &QListView::indexesMoved, this, &MainWindow::reconnectControls);
 }
 
 void MainWindow::startScan()
@@ -80,11 +60,7 @@ void MainWindow::startScan()
             }
             qDebug() << "found new controller: " << controller << controller_name;
             controllers.append(new Controller(controller_name));
-            lw_items_controllers.append(new QListWidgetItem);
-            lw_items_controllers.last()->setSizeHint(QSize(controllers.last()->sizeHint().width(),50));
-            lw_items_controllers.last()->setFlags(lw_items_controllers.last()->flags() & ~Qt::ItemIsSelectable);
-            controllerList->addItem(lw_items_controllers.last());
-            controllerList->setItemWidget(lw_items_controllers.last(),controllers.last());
+            lo_main->addWidget(controllers.last(),controllers.size(),0);
         }
     }
 }
@@ -100,14 +76,10 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo & device)
 
 
         /* connect to the device */
-        racecars.append(new RaceCar(device, this));
+        racecars.append(new RaceCar(device));
         racecars.last()->connectToDevice();
 
-        lw_items_cars.append(new QListWidgetItem);
-        lw_items_cars.last()->setSizeHint(QSize(racecars.last()->sizeHint().width(),50));
-
-        carList->addItem(lw_items_cars.last());
-        carList->setItemWidget(lw_items_cars.last(),racecars.last());
+        lo_main->addWidget(racecars.last(),racecars.size(),1);
     }
 }
 

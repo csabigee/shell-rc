@@ -3,6 +3,8 @@
 #include <QLabel>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QCommonStyle>
+#include <QGroupBox>
 #include "racecar.h"
 
 QBluetoothUuid RaceCar::CONTROL_SERVICE_UUID         = QBluetoothUuid(QStringLiteral("0000fff0-0000-1000-8000-00805f9b34fb"));
@@ -13,14 +15,27 @@ QBluetoothUuid RaceCar::BATTERY_CHARACTERISTICS_UUID = QBluetoothUuid(QStringLit
 RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
     : QWidget{parent}
 {
+    gb_outline = new QGroupBox;
+    QCommonStyle style;
+    pb_up = new QPushButton();
+    pb_down = new QPushButton();
+    pb_up->setIcon(style.standardIcon(QStyle::SP_ArrowUp));
+    pb_down->setIcon(style.standardIcon(QStyle::SP_ArrowDown));
+
     lo_main = new QGridLayout();
+    lo_outline = new QGridLayout();
+
     l_name = new QLabel(carInfo.name());
     pb_batery = new QProgressBar;
     pb_flash = new QPushButton("Flash");
-    lo_main->addWidget(l_name,0,0);
-    lo_main->addWidget(pb_batery,0,1);
-    lo_main->addWidget(pb_flash,0,2);
-    this->setLayout(lo_main);
+    lo_main->addWidget(l_name,0,0,2,1);
+    lo_main->addWidget(pb_batery,0,1,2,1);
+    lo_main->addWidget(pb_flash,0,2,2,1);
+    lo_main->addWidget(pb_up,0,3);
+    lo_main->addWidget(pb_down,1,3);
+    gb_outline->setLayout(lo_main);
+    lo_outline->addWidget(gb_outline);
+    this->setLayout(lo_outline);
 
 
     m_bleTimer.setSingleShot(false);
@@ -44,6 +59,9 @@ RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
     connect(pb_flash, &QPushButton::released, this, &RaceCar::flashLamp);
 
     m_controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
+
+    connect(pb_up, &QPushButton::pressed, this, &RaceCar::place_change_pressed);
+
 }
 
 bool RaceCar::connectToDevice()
@@ -248,4 +266,9 @@ void RaceCar::flashLampTo()
         m_flashTimer.start();
         flash_num--;
     }
+}
+
+void RaceCar::place_change_pressed()
+{
+
 }

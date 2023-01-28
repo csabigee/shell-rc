@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QLabel>
 #include <QGridLayout>
+#include <QGroupBox>
 #include <QTimer>
 #include "led.h"
 
@@ -13,6 +14,8 @@ class Controller : public QWidget
 public:
     explicit Controller(QString name, QWidget *parent = nullptr);
 private:
+    QGroupBox* gb_outline;
+    QGridLayout* lo_outline;
     QLabel* l_name;
     Led* indicator;
     QGridLayout* lo_main;

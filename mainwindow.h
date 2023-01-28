@@ -27,9 +27,6 @@ public:
     ~MainWindow();
 
 private:
-    QListWidget* controllerList;
-    QListWidget* carList;
-
     QJoysticks* joystickController;
 
     QGridLayout* lo_main;
@@ -37,9 +34,6 @@ private:
 
     QList<Controller*> controllers;
     QList<RaceCar*> racecars;
-
-    QList<QListWidgetItem*> lw_items_controllers;
-    QList<QListWidgetItem*> lw_items_cars;
 
     QBluetoothDeviceDiscoveryAgent *bleAgent;
 
