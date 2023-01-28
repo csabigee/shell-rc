@@ -11,6 +11,7 @@ CONFIG += c++11
 include ($$PWD/qjoysticks/QJoysticks.pri)
 
 SOURCES += \
+DarkBlueSheet.cpp \
     controller.cpp \
     led.cpp \
     main.cpp \
@@ -18,9 +19,12 @@ SOURCES += \
     racecar.cpp
 
 HEADERS += \
+DarkBlueSheet.h \
     controller.h \
     led.h \
     mainwindow.h \
     racecar.h
 
-
+RESOURCES += \
+    darkbluestyle.qrc \
+    racecars.qrc

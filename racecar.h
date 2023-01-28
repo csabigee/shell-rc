@@ -16,6 +16,7 @@ class RaceCar : public QWidget
     Q_OBJECT
 public:
     explicit RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent = nullptr);
+    ~RaceCar();
     bool connectToDevice();
     void setThrottle(float throttle);
     void setSteer(float steer);
@@ -23,8 +24,10 @@ public:
     void setTurbo(bool turbo);
     void toggleDirectDrive();
     uint8_t getBattery();
+    bool move_up, move_down;
 
 private:
+    QLabel *carIcon;
     QGroupBox* gb_outline;
     QGridLayout* lo_main;
     QGridLayout* lo_outline;
@@ -57,7 +60,7 @@ private:
 
 signals:
     void battery_changed(uint8_t percentage);
-    void place_change(bool up);
+    void place_change();
 
 private slots:
     void send_ctrl();
@@ -71,8 +74,6 @@ private slots:
     void batteryCharacteristicChanged(const QLowEnergyCharacteristic &info, const QByteArray &value);
     void flashLamp();
     void flashLampTo();
-    void place_change_pressed();
-
 
 };
 

@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QCommonStyle>
 #include <QGroupBox>
+#include <QCoreApplication>
 #include "racecar.h"
 
 QBluetoothUuid RaceCar::CONTROL_SERVICE_UUID         = QBluetoothUuid(QStringLiteral("0000fff0-0000-1000-8000-00805f9b34fb"));
@@ -15,24 +16,47 @@ QBluetoothUuid RaceCar::BATTERY_CHARACTERISTICS_UUID = QBluetoothUuid(QStringLit
 RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
     : QWidget{parent}
 {
+    carIcon = new QLabel("");
+    if(carInfo.name().startsWith(QStringLiteral("SL-FXX-K Evo")))
+        carIcon->setPixmap(QPixmap(":/cars/FXX-K-EVO.png"));
+    else if(carInfo.name().startsWith(QStringLiteral("SL-SF1000")))
+        carIcon->setPixmap(QPixmap(":/cars/SF1000-Tuscan-GP-Ferrari-1000.png"));
+    else if(carInfo.name().startsWith(QStringLiteral("SL-488 CHALLENGE Evo")))
+        carIcon->setPixmap(QPixmap(":/cars/488-challenge-evo.png"));
+    else if(carInfo.name().startsWith(QStringLiteral("SL-488 GTE")))
+        carIcon->setPixmap(QPixmap(":/cars/SL-488 GTE.png"));
+    else
+        carIcon->setPixmap(QPixmap(":/cars/FXX-K-EVO.png"));
+
+
+    this->setFixedHeight(128);
+    move_up = move_down=false;
     gb_outline = new QGroupBox;
     QCommonStyle style;
     pb_up = new QPushButton();
     pb_down = new QPushButton();
-    pb_up->setIcon(style.standardIcon(QStyle::SP_ArrowUp));
-    pb_down->setIcon(style.standardIcon(QStyle::SP_ArrowDown));
+    pb_up->setIcon(style.standardIcon(QStyle::SP_TitleBarShadeButton));
+    pb_down->setIcon(style.standardIcon(QStyle::SP_TitleBarUnshadeButton));
+    pb_up->setIcon(QIcon(QPixmap(":/darkbluestyle/icon_arrow_up.png")));
+    pb_down->setIcon(QIcon(QPixmap(":/darkbluestyle/icon_arrow_down.png")));
 
     lo_main = new QGridLayout();
     lo_outline = new QGridLayout();
 
+    lo_main->setMargin(0);
+    lo_main->setContentsMargins(8,8,8,8);
+    lo_outline->setMargin(0);
+    lo_outline->setContentsMargins(0,0,0,0);
+
     l_name = new QLabel(carInfo.name());
     pb_batery = new QProgressBar;
     pb_flash = new QPushButton("Flash");
-    lo_main->addWidget(l_name,0,0,2,1);
-    lo_main->addWidget(pb_batery,0,1,2,1);
-    lo_main->addWidget(pb_flash,0,2,2,1);
-    lo_main->addWidget(pb_up,0,3);
-    lo_main->addWidget(pb_down,1,3);
+    lo_main->addWidget(carIcon,0,0,3,1);
+    lo_main->addWidget(l_name,0,1,1,1);
+    lo_main->addWidget(pb_batery,1,1,1,1);
+    lo_main->addWidget(pb_flash,2,1,1,1);
+    lo_main->addWidget(pb_up,0,2);
+    lo_main->addWidget(pb_down,2,2);
     gb_outline->setLayout(lo_main);
     lo_outline->addWidget(gb_outline);
     this->setLayout(lo_outline);
@@ -60,7 +84,9 @@ RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
 
     m_controller->setRemoteAddressType(QLowEnergyController::PublicAddress);
 
-    connect(pb_up, &QPushButton::pressed, this, &RaceCar::place_change_pressed);
+    connect(pb_up, &QPushButton::pressed, this, [this]() {move_up=true; emit place_change();});
+    connect(pb_down, &QPushButton::pressed, this, [this]() {move_down=true; emit place_change();});
+
 
 }
 
@@ -77,7 +103,7 @@ bool RaceCar::connectToDevice()
     }
 
     if (m_controller->state() == QLowEnergyController::ConnectedState) {
-        m_controller->disconnectFromDevice();
+        //m_controller->disconnectFromDevice();
         //m_reconnecting = true;
     } else {
         m_controller->connectToDevice();
@@ -268,7 +294,8 @@ void RaceCar::flashLampTo()
     }
 }
 
-void RaceCar::place_change_pressed()
+RaceCar::~RaceCar()
 {
-
+    m_controller->disconnectFromDevice();
 }
+

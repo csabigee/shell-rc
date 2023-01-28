@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QProgressBar>
 #include <QListWidget>
+#include <QMouseEvent>
 
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QJoysticks.h>
@@ -26,26 +27,36 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+protected:
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent* event);
+
 private:
-    QJoysticks* joystickController;
+    QPoint mpos;
+    QGridLayout *loMain;
+    QGridLayout *loControllers;
+    QGridLayout *loRaceCars;
+    QPushButton* pbExit;
+    QPushButton *pbRescan;
 
-    QGridLayout* lo_main;
-    QPushButton* pb_scan;
-
+    QJoysticks *joystickController;
     QList<Controller*> controllers;
-    QList<RaceCar*> racecars;
+    QList<RaceCar*> raceCars;
+    QList<int> raceCarPositions;
 
     QBluetoothDeviceDiscoveryAgent *bleAgent;
 
 private slots:
-    void startScan();
+    void startReScan();
     void deviceDiscovered(const QBluetoothDeviceInfo&);
     void deviceScanFinished();
     void deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error);
 
-    void axis_slot(int,int,qreal);
-    void button_slot(int,int,bool);
-    void reconnectControls(const QModelIndexList &indexes);
+    void axisAction(int,int,qreal);
+    void buttonAction(int,int,bool);
+    void raceCarOrderChange();
+
+    void controllerDiscovered();
 
 };
 #endif // MAINWINDOW_H

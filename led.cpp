@@ -31,7 +31,7 @@ Led::Led(QWidget *parent) : QWidget(parent)
     /*!
      * Set the color of the circle to red.
      */
-    ledColor = Qt::darkGreen;
+    ledColor = QColor(130,21,0);
 
     /*!
      * Show the widget.
@@ -50,9 +50,9 @@ void Led::setState(bool state)
      * if \p<state> is false, set the color of the circle to red.
      */
     if(state)
-        ledColor = Qt::green;
+        ledColor = QColor(255,40,0);
     else
-        ledColor = Qt::darkGreen;
+        ledColor = QColor(130,21,0);
 
     /*!
      * Update the widget, which triggers a paintEvent(QPaintEvent *e).

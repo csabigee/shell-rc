@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>cars/488-challenge-evo.png</file>
+        <file>cars/FXX-K-EVO.png</file>
+        <file>cars/SF1000-Tuscan-GP-Ferrari-1000.png</file>
+        <file>cars/SL-488 GTE.png</file>
+    </qresource>
+</RCC>

@@ -8,11 +8,16 @@
 Controller::Controller(QString name, QWidget *parent)
     : QWidget{parent}
 {
+    this->setFixedHeight(128);
     l_name = new QLabel(name);
     indicator = new Led;
     lo_main = new QGridLayout;
     lo_outline = new QGridLayout;
     gb_outline = new QGroupBox;
+    lo_main->setMargin(0);
+    lo_main->setContentsMargins(8,8,8,8);
+    lo_outline->setMargin(0);
+    lo_outline->setContentsMargins(0,0,0,0);
 
     lo_main->addWidget(l_name,0,0);
     lo_main->addWidget(indicator,0,1);
@@ -23,6 +28,7 @@ Controller::Controller(QString name, QWidget *parent)
     m_flashTimer.setSingleShot(true);
     m_flashTimer.setInterval(100);
     connect(&m_flashTimer, &QTimer::timeout, this, &Controller::flashIndicatorTo);
+
 }
 
 void Controller::flashIndicator()
