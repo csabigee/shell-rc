@@ -9,32 +9,32 @@ Controller::Controller(QString name, QWidget *parent)
     : QWidget{parent}
 {
     this->setFixedHeight(128);
-    l_name = new QLabel(name);
+    loOutline = new QGridLayout;
+    loOutline->setMargin(0);
+    loOutline->setContentsMargins(0,0,0,0);
+    gbOutline = new QGroupBox;
+    loMain = new QGridLayout;
+    loMain->setMargin(0);
+    loMain->setContentsMargins(8,8,8,8);
+    laName = new QLabel(name);
     indicator = new Led;
-    lo_main = new QGridLayout;
-    lo_outline = new QGridLayout;
-    gb_outline = new QGroupBox;
-    lo_main->setMargin(0);
-    lo_main->setContentsMargins(8,8,8,8);
-    lo_outline->setMargin(0);
-    lo_outline->setContentsMargins(0,0,0,0);
 
-    lo_main->addWidget(l_name,0,0);
-    lo_main->addWidget(indicator,0,1);
-    gb_outline->setLayout(lo_main);
-    lo_outline->addWidget(gb_outline);
-    this->setLayout(lo_outline);
+    loMain->addWidget(laName,0,0,Qt::AlignCenter);
+    loMain->addWidget(indicator,1,0,Qt::AlignCenter);
+    gbOutline->setLayout(loMain);
+    loOutline->addWidget(gbOutline);
+    this->setLayout(loOutline);
 
-    m_flashTimer.setSingleShot(true);
-    m_flashTimer.setInterval(100);
-    connect(&m_flashTimer, &QTimer::timeout, this, &Controller::flashIndicatorTo);
+    flashTimer.setSingleShot(true);
+    flashTimer.setInterval(flashingIntervalMs);
+    connect(&flashTimer, &QTimer::timeout, this, &Controller::flashIndicatorTo);
 
 }
 
 void Controller::flashIndicator()
 {
     indicator->setState(true);
-    m_flashTimer.start();
+    flashTimer.start();
 }
 
 void Controller::flashIndicatorTo()

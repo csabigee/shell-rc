@@ -18,49 +18,49 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowFlags(Qt::FramelessWindowHint); /* No frame */
     setWindowTitle("Shell racing");   /* Set the title of the main window */
 
-    joystickController=QJoysticks::getInstance();
 
     /* enable virtual controller for debug purposes */
+    joystickController=QJoysticks::getInstance();
     joystickController->setVirtualJoystickRange(1);
     joystickController->setVirtualJoystickEnabled(true);
     joystickController->setVirtualJoystickAxisSensibility(0.7);
 
     loMain = new QGridLayout();
+    loMain->setContentsMargins(10,10,10,10);
+    loMain->setMargin(10);
+    loControllers = new QGridLayout();
+    loControllers->setAlignment(Qt::AlignTop);
+    loControllers->setContentsMargins(0,0,0,0);
+    loRaceCars = new QGridLayout();
+    loRaceCars->setAlignment(Qt::AlignTop);
+    loRaceCars->setContentsMargins(0,0,0,0);
+
+    pbRescan = new QPushButton("Rescan");
+    pbRescan->setFixedHeight(32);
     pbExit = new QPushButton();
     pbExit->setIcon(QIcon(QPixmap(":/darkbluestyle/icon_close.png")));
     pbExit->setFixedSize(32,32);
-    pbRescan = new QPushButton("Rescan");
-    pbRescan->setFixedHeight(32);
-    loControllers = new QGridLayout();
-    loControllers->setAlignment(Qt::AlignTop);
-    loRaceCars = new QGridLayout();
-    loRaceCars->setAlignment(Qt::AlignTop);
     loMain->addWidget(pbRescan,0,0,1,1,Qt::AlignLeft);
     loMain->addWidget(pbExit,0,1,1,1,Qt::AlignRight);
     loMain->addLayout(loControllers,1,0);
     loMain->addLayout(loRaceCars,1,1);
-    loControllers->setContentsMargins(0,0,0,0);
-    loRaceCars->setContentsMargins(0,0,0,0);
-    loMain->setContentsMargins(10,10,10,10);
-    loMain->setMargin(10);
 
     connect(pbExit, &QPushButton::released, this, &MainWindow::close);
     connect(pbRescan,&QPushButton::released,this,&MainWindow::startReScan);
 
     auto central = new QWidget;
     central->setLayout(loMain);
-
     setCentralWidget(central);
 
     bleAgent = new QBluetoothDeviceDiscoveryAgent();
-    bleAgent->setLowEnergyDiscoveryTimeout(2000);
+    bleAgent->setLowEnergyDiscoveryTimeout(3000);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &MainWindow::deviceDiscovered);
     connect(bleAgent, qOverload<QBluetoothDeviceDiscoveryAgent::Error>(&QBluetoothDeviceDiscoveryAgent::error), this, &MainWindow::deviceScanError);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &MainWindow::deviceScanFinished);
 
-
     /* scan cars */
     bleAgent->start();
+
     /* scan controllers */
     connect(joystickController, &QJoysticks::countChanged,this, &MainWindow::controllerDiscovered);
 }
@@ -81,8 +81,6 @@ void MainWindow::startReScan()
 
     bleAgent->start();
     joystickController->updateInterfaces();
-
-
 }
 
 void MainWindow::controllerDiscovered(){
@@ -94,10 +92,10 @@ void MainWindow::controllerDiscovered(){
     } else {
         for(const auto &controller: qAsConst(controller_ids)){
             QString controller_name = controller;
-            if(controller_name==QString::null){
+            if(controller_name==QString()){
                 controller_name="Generic controller";
             }
-            qDebug() << "found new controller: " << controller << controller_name;
+            qDebug() << "found new controller: " << controller_name;
             controllers.append(new Controller(controller_name));
             loControllers->addWidget(controllers.last(),controllers.size(),0,Qt::AlignTop);
         }
@@ -106,27 +104,18 @@ void MainWindow::controllerDiscovered(){
 
 void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo & device)
 {
-    /* check if bluetooth device is a shell RC racecar */
-    if(device.name().startsWith(QStringLiteral("SL-FXX-K Evo"))
-            || device.name().startsWith(QStringLiteral("SL-FXX-K Evo"))
-            || device.name().startsWith(QStringLiteral("SL-SF1000"))
-            || device.name().startsWith(QStringLiteral("SL-488 CHALLENGE Evo"))
-            || device.name().startsWith(QStringLiteral("SL-488 GTE"))) {
-        qDebug() << "Found new car:" << device.name() << '(' << device.address().toString() << ')';
-
-
-
-        /* connect to the device */
-        raceCars.append(new RaceCar(device));
-        raceCars.last()->connectToDevice();
-
-        connect(raceCars.last(), &RaceCar::place_change, this, &MainWindow::raceCarOrderChange);
-
-        loRaceCars->addWidget(raceCars.last(),raceCars.size(),1,Qt::AlignTop);
-        raceCarPositions.append(raceCarPositions.size());
+    for ( const auto& ii : validCarsBleId  ){
+        if(device.name().contains(ii)){
+            qDebug() << "Found new car:" << device.name() << '(' << device.address().toString() << ')';
+            /* connect to the device */
+            raceCars.append(new RaceCar(device));
+            raceCars.last()->connectToDevice();
+            connect(raceCars.last(), &RaceCar::placeChange, this, &MainWindow::raceCarOrderChange);
+            loRaceCars->addWidget(raceCars.last(),raceCars.size(),1,Qt::AlignTop);
+            raceCarPositions.append(raceCarPositions.size());
+        }
     }
 }
-
 
 void MainWindow::deviceScanFinished()
 {

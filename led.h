@@ -12,8 +12,7 @@
 #include <QWidget>
 
 /*!
- * \brief The Led class
- * \details This class is a widget. It draws a fixed size (20x20) red or green circle. The default contructor sets the color to red. By setting the state to true via the setState(bool state) function, the color changes from red to green. This widget can be used to indicate for example a network connection status.
+ * \brief The Led class is a widget. It draws a fixed size (20x20) red circle. The default contructor sets the color to red. By setting the state to true via the setState(bool state) function, the color changes from dark red to light red. This widget can be used to indicate for example a network connection status.
  */
 class Led : public QWidget
 {

@@ -10,7 +10,15 @@
 #include <QLowEnergyController>
 #include <QElapsedTimer>
 #include <QGroupBox>
+#include <string_view>
 
+constexpr int bleControlIntervalMs = 50;
+constexpr int lampFlashingIntervalMs = 250;
+static const QStringList validCarsBleId = {"SL-FXX-K Evo","SL-SF1000","SL-488 CHALLENGE Evo","SL-488 GTE"};
+
+/*!
+ * \brief The RaceCar class
+ */
 class RaceCar : public QWidget
 {
     Q_OBJECT
@@ -27,43 +35,45 @@ public:
     bool move_up, move_down;
 
 private:
+    QGridLayout *loOutline;
+    QGroupBox *gbOutline;
+    QGridLayout *loMain;
     QLabel *carIcon;
-    QGroupBox* gb_outline;
-    QGridLayout* lo_main;
-    QGridLayout* lo_outline;
-    QLabel* l_name;
-    QProgressBar* pb_batery;
-    QPushButton* pb_flash;
-    QPushButton* pb_up;
-    QPushButton* pb_down;
-    QTimer m_bleTimer;
-    QTimer m_flashTimer;
-    uint32_t flash_num;
-    QLowEnergyController *m_controller = nullptr;
-    QElapsedTimer m_connectTimer;
-    QLowEnergyService *m_controlService = nullptr;
-    QLowEnergyService *m_batteryService = nullptr;
-    QLowEnergyCharacteristic m_controlCharacteristics;
+    QLabel *laName;
+    QProgressBar *pbBatery;
+    QPushButton *pbFlash;
+    QPushButton *pbUp;
+    QPushButton *pbDown;
+
+    QTimer bleTimer;
+    QLowEnergyController *bleController = nullptr;
+    QElapsedTimer connectTimer;
+    QLowEnergyService *controlService = nullptr;
+    QLowEnergyService *batteryService = nullptr;
+    QLowEnergyCharacteristic controlCharacteristics;
 
     static QBluetoothUuid CONTROL_SERVICE_UUID;
     static QBluetoothUuid BATTERY_SERVICE_UUID;
     static QBluetoothUuid CONTROL_CHARACTERISTICS_UUID;
     static QBluetoothUuid BATTERY_CHARACTERISTICS_UUID;
 
-    bool m_turbo = false;
-    bool m_lamp = false;
-    bool m_directdrive = false;
-    quint8 m_batteryPercentage = 0.0;
-    float m_throttle=0.0;
-    float m_steering=0.0;
-    float pwm_cntr=0.0;
+    QTimer flashTimer;
+    uint32_t flashNum;
+
+    bool turbo = false;
+    bool lamp = false;
+    bool directDrive = false;
+    quint8 batteryPercentage = 0.0;
+    float throttle=0.0;
+    float steering=0.0;
+    float pwmCntr=0.0;
 
 signals:
-    void battery_changed(uint8_t percentage);
-    void place_change();
+    void batteryChanged(uint8_t percentage);
+    void placeChange();
 
 private slots:
-    void send_ctrl();
+    void sendCtrl();
     void deviceDisconnected();
     void deviceConnected();
     void errorReceived(QLowEnergyController::Error error);
