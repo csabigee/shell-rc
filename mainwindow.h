@@ -42,7 +42,6 @@ private:
     QJoysticks *joystickController;
     QList<Controller*> controllers;
     QList<RaceCar*> raceCars;
-    QList<int> raceCarPositions;
 
     QBluetoothDeviceDiscoveryAgent *bleAgent;
 

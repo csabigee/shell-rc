@@ -67,13 +67,20 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::startReScan()
 {
+
+    disconnect(joystickController,&QJoysticks::axisChanged, this, &MainWindow::axisAction);
+    disconnect(joystickController,&QJoysticks::buttonChanged, this, &MainWindow::buttonAction);
+
     /* disconnect everything, destroy every controller and racecar */
     for(uint8_t ii=0; ii<raceCars.length(); ii++){
+        raceCars[ii]->setVisible(false);
+        disconnect(raceCars[ii], &RaceCar::placeChange, this, &MainWindow::raceCarOrderChange);
         loRaceCars->removeWidget(raceCars[ii]);
         delete raceCars[ii];
     }
     raceCars.clear();
     for(uint8_t ii=0; ii<controllers.length(); ii++){
+        controllers[ii]->setVisible(false);
         loControllers->removeWidget(controllers[ii]);
         delete controllers[ii];
     }
@@ -81,6 +88,9 @@ void MainWindow::startReScan()
 
     bleAgent->start();
     joystickController->updateInterfaces();
+
+    connect(joystickController,&QJoysticks::axisChanged, this, &MainWindow::axisAction);
+    connect(joystickController,&QJoysticks::buttonChanged, this, &MainWindow::buttonAction);
 }
 
 void MainWindow::controllerDiscovered(){
@@ -96,7 +106,7 @@ void MainWindow::controllerDiscovered(){
                 controller_name="Generic controller";
             }
             qDebug() << "found new controller: " << controller_name;
-            controllers.append(new Controller(controller_name));
+            controllers.append(new Controller(controller_name,this));
             loControllers->addWidget(controllers.last(),controllers.size(),0,Qt::AlignTop);
         }
     }
@@ -108,11 +118,10 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo & device)
         if(device.name().contains(ii)){
             qDebug() << "Found new car:" << device.name() << '(' << device.address().toString() << ')';
             /* connect to the device */
-            raceCars.append(new RaceCar(device));
+            raceCars.append(new RaceCar(device,this));
             raceCars.last()->connectToDevice();
             connect(raceCars.last(), &RaceCar::placeChange, this, &MainWindow::raceCarOrderChange);
             loRaceCars->addWidget(raceCars.last(),raceCars.size(),1,Qt::AlignTop);
-            raceCarPositions.append(raceCarPositions.size());
         }
     }
 }
@@ -155,7 +164,7 @@ void MainWindow::axisAction(int js,int axis,qreal value)
 {
     controllers[js]->flashIndicator();
     qDebug() << "axis " << axis << "value" << value;
-    if(js<=raceCars.length()){
+    if(js<raceCars.length()){
         if(axis==1){
             raceCars[js]->setThrottle(-1*value);
         }
@@ -168,7 +177,7 @@ void MainWindow::buttonAction(int js,int button, bool pressed)
 {
     controllers[js]->flashIndicator();
     qDebug() << "js" << js << " button" << button << pressed;
-    if(js<=raceCars.length()){
+    if(js<raceCars.length()){
         if(button==1){
             if(pressed){
                 raceCars[js]->setSteer(1);

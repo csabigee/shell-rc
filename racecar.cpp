@@ -281,6 +281,8 @@ void RaceCar::flashLampTo()
 
 RaceCar::~RaceCar()
 {
+    bleTimer.stop();
+    flashTimer.stop();
     bleController->disconnectFromDevice();
 }
 
