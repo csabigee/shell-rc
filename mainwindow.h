@@ -53,7 +53,7 @@ private slots:
 
     void axisAction(int,int,qreal);
     void buttonAction(int,int,bool);
-    void raceCarOrderChange();
+    void reorderCars();
 
     void controllerDiscovered();
 

@@ -15,9 +15,8 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    setWindowFlags(Qt::FramelessWindowHint); /* No frame */
-    setWindowTitle("Shell racing");   /* Set the title of the main window */
-
+    setWindowFlags(Qt::FramelessWindowHint);
+    setWindowTitle("Shell racing");
 
     /* enable virtual controller for debug purposes */
     joystickController=QJoysticks::getInstance();
@@ -59,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &MainWindow::deviceScanFinished);
 
     /* scan cars */
+    pbRescan->setEnabled(false);
     bleAgent->start();
 
     /* scan controllers */
@@ -67,6 +67,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::startReScan()
 {
+    pbRescan->setEnabled(false);
 
     disconnect(joystickController,&QJoysticks::axisChanged, this, &MainWindow::axisAction);
     disconnect(joystickController,&QJoysticks::buttonChanged, this, &MainWindow::buttonAction);
@@ -74,7 +75,7 @@ void MainWindow::startReScan()
     /* disconnect everything, destroy every controller and racecar */
     for(uint8_t ii=0; ii<raceCars.length(); ii++){
         raceCars[ii]->setVisible(false);
-        disconnect(raceCars[ii], &RaceCar::placeChange, this, &MainWindow::raceCarOrderChange);
+        disconnect(raceCars[ii], &RaceCar::placeChange, this, &MainWindow::reorderCars);
         loRaceCars->removeWidget(raceCars[ii]);
         delete raceCars[ii];
     }
@@ -120,7 +121,7 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo & device)
             /* connect to the device */
             raceCars.append(new RaceCar(device,this));
             raceCars.last()->connectToDevice();
-            connect(raceCars.last(), &RaceCar::placeChange, this, &MainWindow::raceCarOrderChange);
+            connect(raceCars.last(), &RaceCar::placeChange, this, &MainWindow::reorderCars);
             loRaceCars->addWidget(raceCars.last(),raceCars.size(),1,Qt::AlignTop);
         }
     }
@@ -129,6 +130,7 @@ void MainWindow::deviceDiscovered(const QBluetoothDeviceInfo & device)
 void MainWindow::deviceScanFinished()
 {
     qDebug() << "ble device scan done";
+    pbRescan->setEnabled(true);
 
     connect(joystickController,&QJoysticks::axisChanged, this, &MainWindow::axisAction);
     connect(joystickController,&QJoysticks::buttonChanged, this, &MainWindow::buttonAction);
@@ -163,7 +165,7 @@ void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
 void MainWindow::axisAction(int js,int axis,qreal value)
 {
     controllers[js]->flashIndicator();
-    qDebug() << "axis " << axis << "value" << value;
+    //qDebug() << "axis " << axis << "value" << value;
     if(js<raceCars.length()){
         if(axis==1){
             raceCars[js]->setThrottle(-1*value);
@@ -176,7 +178,7 @@ void MainWindow::axisAction(int js,int axis,qreal value)
 void MainWindow::buttonAction(int js,int button, bool pressed)
 {
     controllers[js]->flashIndicator();
-    qDebug() << "js" << js << " button" << button << pressed;
+    //qDebug() << "js" << js << " button" << button << pressed;
     if(js<raceCars.length()){
         if(button==1){
             if(pressed){
@@ -188,7 +190,7 @@ void MainWindow::buttonAction(int js,int button, bool pressed)
         if(button==2){
             if(pressed){
                 raceCars[js]->setSteer(-1);
-            } else{
+            } else {
                 raceCars[js]->setSteer(0);
             }
         }
@@ -206,7 +208,7 @@ void MainWindow::buttonAction(int js,int button, bool pressed)
     }
 }
 
-void MainWindow::raceCarOrderChange()
+void MainWindow::reorderCars()
 {
     if(raceCars.length()>1){
         for(uint8_t ii=1; ii< raceCars.length(); ii++){
