@@ -29,8 +29,12 @@ I used the [QJoysticks](https://github.com/alex-spataru/QJoysticks) library to i
  
 The message protocol over bluetooth was [reverse engineerd](https://gist.github.com/scrool/e79d6a4cb50c26499746f4fe473b3768) earlier by others for the Brandbase Nissan Formula RC car series. The communcation was encrypted there.
 
-However communication for these models are not encrypted. I based my work on [this implementation](https://github.com/martonmiklos/sailfish-ble-rc) of an APP for sailfish OS:
+However communication for these models are not encrypted. I based my work on [this implementation](https://github.com/martonmiklos/sailfish-ble-rc) of an APP for sailfish OS.
 
 [Conthrax Font Free](https://www.freefonts.io/conthrax-font-free-download)
 
 Andoid app is coming soon! :)
+
+## Binaries
+Here You can find an istaller for Windows x64. Install the redistributable package vc_redist.x64.exe if necessary.
+https://drive.google.com/file/d/16c5UyQQHvu-Hr1ywa6I8n9Ah5otda881/view?usp=sharing
