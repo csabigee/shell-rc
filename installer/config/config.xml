@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+  <Name>shell_rc</Name>
+  <Version>0.9.0</Version>
+  <Title>shell_rc</Title>
+  <Publisher>csabigee</Publisher>
+  <StartMenuDir>shell_rc</StartMenuDir>
+  <TargetDir>@ApplicationsDirX64@/shell_rc</TargetDir>
+</Installer>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>shell_rc</DisplayName>
+    <Description>Install shell_rc graphical application for interacting with bluetooth cars from Shell.</Description>
+    <Version>0.9.0</Version>
+    <ReleaseDate>2023-04-13</ReleaseDate>
+    <Name>com.csabigee.installer</Name>
+    <Virtual>true</Virtual>
+    <UpdateText>Initial release</UpdateText>
+</Package>
