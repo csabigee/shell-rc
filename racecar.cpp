@@ -34,6 +34,14 @@ RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
         carIcon->setPixmap(QPixmap(":/cars/488-challenge-evo.png"));
     else if(carInfo.name().startsWith(QStringLiteral("SL-488 GTE")))
         carIcon->setPixmap(QPixmap(":/cars/SL-488 GTE.png"));
+    else if(carInfo.name().startsWith(QStringLiteral("SL-330 P4(1967)")))
+        carIcon->setPixmap(QPixmap(":/cars/330-P4.png"));
+    else if(carInfo.name().startsWith(QStringLiteral("SL-Daytona SP3")))
+        carIcon->setPixmap(QPixmap(":/cars/Daytona SP3.png"));
+    else if(carInfo.name().startsWith(QStringLiteral("SL-296 GTB")))
+        carIcon->setPixmap(QPixmap(":/cars/296 GTB.png"));
+    else if(carInfo.name().startsWith(QStringLiteral("SL-F1-75")))
+        carIcon->setPixmap(QPixmap(":/cars/F1-75.png"));
     else
         carIcon->setPixmap(QPixmap(":/cars/FXX-K-EVO.png"));
 
