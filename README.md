@@ -6,6 +6,10 @@ At the Shell gas station, I grabbed some cheap Bluetooth RC cars during a promo 
 :--------:|:--------:|:--------:|:---------
 SL-488 CHALLENGE Evo | SL-FXX-K Evo | SL-SF1000 | L-488 GTE
 
+![car1](/cars/F1-75.png) |![car1](/cars/Daytona%20SP3.png) | ![car1](/cars/296%20GTB.png) | ![car1](/cars/330-P4.png)
+:--------:|:--------:|:--------:|:---------
+F1-75 | Daytona SP3 | 296 GTB | 330 P4
+
 The cars have the following features:
 * throttle forward/backward
 * steering left/right
