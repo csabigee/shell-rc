@@ -38,6 +38,14 @@
 #define AXIS_JL 4
 #define AXIS_KI 5
 
+struct buttonMap{
+   int steerRight = Qt::Key_Right;
+   int steerLeft = Qt::Key_Left;
+   int forward = Qt::Key_Up;
+   int backward = Qt::Key_Down;
+};
+
+
 enum AxisState : qint8
 {
 
@@ -70,7 +78,7 @@ signals:
    void buttonEvent(const QJoystickButtonEvent &event);
 
 public:
-   VirtualJoystick(QObject *parent = Q_NULLPTR);
+   VirtualJoystick(QString name, buttonMap map, QObject *parent = Q_NULLPTR);
 
    qreal axisRange() const;
    bool joystickEnabled() const;
@@ -94,6 +102,7 @@ protected:
    bool eventFilter(QObject *object, QEvent *event);
 
 private:
+   buttonMap m_map;
    qreal m_axisRange;
    bool m_joystickEnabled;
    QJoystickDevice m_joystick;

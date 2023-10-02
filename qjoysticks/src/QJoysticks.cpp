@@ -30,7 +30,20 @@ QJoysticks::QJoysticks()
 {
    /* Initialize input methods */
    m_sdlJoysticks = new SDL_Joysticks(this);
-   m_virtualJoystick = new VirtualJoystick(this);
+   buttonMap mapWASD={
+      Qt::Key_D,
+      Qt::Key_A,
+      Qt::Key_W,
+      Qt::Key_S
+   };
+   buttonMap mapArrows={
+      Qt::Key_Right,
+      Qt::Key_Left,
+      Qt::Key_Up,
+      Qt::Key_Down
+   };
+   m_virtualJoystick.append(new VirtualJoystick("WASD",mapWASD,this));
+   m_virtualJoystick.append(new VirtualJoystick("arrows",mapArrows,this));
 
    /* Configure SDL joysticks */
    connect(sdlJoysticks(), &SDL_Joysticks::POVEvent, this, &QJoysticks::POVEvent);
@@ -39,10 +52,13 @@ QJoysticks::QJoysticks()
    connect(sdlJoysticks(), &SDL_Joysticks::countChanged, this, &QJoysticks::updateInterfaces);
 
    /* Configure virtual joysticks */
-   connect(virtualJoystick(), &VirtualJoystick::povEvent, this, &QJoysticks::POVEvent);
-   connect(virtualJoystick(), &VirtualJoystick::axisEvent, this, &QJoysticks::axisEvent);
-   connect(virtualJoystick(), &VirtualJoystick::buttonEvent, this, &QJoysticks::buttonEvent);
-   connect(virtualJoystick(), &VirtualJoystick::enabledChanged, this, &QJoysticks::updateInterfaces);
+   for(int ii=0; ii< m_virtualJoystick.size(); ii++)
+   {
+      connect(virtualJoystick(ii), &VirtualJoystick::povEvent, this, &QJoysticks::POVEvent);
+      connect(virtualJoystick(ii), &VirtualJoystick::axisEvent, this, &QJoysticks::axisEvent);
+      connect(virtualJoystick(ii), &VirtualJoystick::buttonEvent, this, &QJoysticks::buttonEvent);
+      connect(virtualJoystick(ii), &VirtualJoystick::enabledChanged, this, &QJoysticks::updateInterfaces);
+   }
 
    /* React to own signals to create QML signals */
    connect(this, &QJoysticks::POVEvent, this, &QJoysticks::onPOVEvent);
@@ -59,7 +75,7 @@ QJoysticks::~QJoysticks()
 {
    delete m_settings;
    delete m_sdlJoysticks;
-   delete m_virtualJoystick;
+   m_virtualJoystick.clear();
 }
 
 /**
@@ -228,9 +244,9 @@ SDL_Joysticks *QJoysticks::sdlJoysticks() const
  * \note You can also change the properties of the virtual joysticks using the
  *       functions of the \c QJoysticks system class
  */
-VirtualJoystick *QJoysticks::virtualJoystick() const
+VirtualJoystick *QJoysticks::virtualJoystick(const int index) const
 {
-   return m_virtualJoystick;
+   return m_virtualJoystick.at(index);
 }
 
 /**
@@ -321,15 +337,18 @@ void QJoysticks::updateInterfaces()
       }
 
       /* Register the virtual joystick (if its not blacklisted) */
-      if (virtualJoystick()->joystickEnabled())
+      for(int ii=0; ii< m_virtualJoystick.size(); ii++)
       {
-         QJoystickDevice *joystick = virtualJoystick()->joystick();
-         joystick->blacklisted = m_settings->value(joystick->name, false).toBool();
-
-         if (!joystick->blacklisted)
+         if (virtualJoystick(ii)->joystickEnabled())
          {
-            addInputDevice(joystick);
-            virtualJoystick()->setJoystickID(inputDevices().count() - 1);
+            QJoystickDevice *joystick = virtualJoystick(ii)->joystick();
+            joystick->blacklisted = m_settings->value(joystick->name, false).toBool();
+
+            if (!joystick->blacklisted)
+            {
+               addInputDevice(joystick);
+               virtualJoystick(ii)->setJoystickID(inputDevices().count() - 1);
+            }
          }
       }
 
@@ -342,15 +361,18 @@ void QJoysticks::updateInterfaces()
       }
 
       /* Register the virtual joystick (if its blacklisted) */
-      if (virtualJoystick()->joystickEnabled())
+      for(int ii=0; ii< m_virtualJoystick.size(); ii++)
       {
-         QJoystickDevice *joystick = virtualJoystick()->joystick();
-         joystick->blacklisted = m_settings->value(joystick->name, false).toBool();
-
-         if (joystick->blacklisted)
+         if (virtualJoystick(ii)->joystickEnabled())
          {
-            addInputDevice(joystick);
-            virtualJoystick()->setJoystickID(inputDevices().count() - 1);
+            QJoystickDevice *joystick = virtualJoystick(ii)->joystick();
+            joystick->blacklisted = m_settings->value(joystick->name, false).toBool();
+
+            if (joystick->blacklisted)
+            {
+               addInputDevice(joystick);
+               virtualJoystick(ii)->setJoystickID(inputDevices().count() - 1);
+            }
          }
       }
    }
@@ -366,13 +388,16 @@ void QJoysticks::updateInterfaces()
       }
 
       /* Register virtual joystick */
-      if (virtualJoystick()->joystickEnabled())
+      for(int ii=0; ii< m_virtualJoystick.size(); ii++)
       {
-         QJoystickDevice *joystick = virtualJoystick()->joystick();
-         joystick->blacklisted = m_settings->value(joystick->name, false).toBool();
+         if (virtualJoystick(ii)->joystickEnabled())
+         {
+            QJoystickDevice *joystick = virtualJoystick(ii)->joystick();
+            joystick->blacklisted = m_settings->value(joystick->name, false).toBool();
 
-         addInputDevice(joystick);
-         virtualJoystick()->setJoystickID(inputDevices().count() - 1);
+            addInputDevice(joystick);
+            virtualJoystick(ii)->setJoystickID(inputDevices().count() - 1);
+         }
       }
    }
 
@@ -387,7 +412,8 @@ void QJoysticks::updateInterfaces()
  */
 void QJoysticks::setVirtualJoystickRange(qreal range)
 {
-   virtualJoystick()->setAxisRange(range);
+   for(int ii=0; ii< m_virtualJoystick.size(); ii++)
+      virtualJoystick(ii)->setAxisRange(range);
 }
 
 /**
@@ -395,12 +421,14 @@ void QJoysticks::setVirtualJoystickRange(qreal range)
  */
 void QJoysticks::setVirtualJoystickEnabled(bool enabled)
 {
-   virtualJoystick()->setJoystickEnabled(enabled);
+   for(int ii=0; ii< m_virtualJoystick.size(); ii++)
+      virtualJoystick(ii)->setJoystickEnabled(enabled);
 }
 
 void QJoysticks::setVirtualJoystickAxisSensibility(qreal sensibility)
 {
-   virtualJoystick()->setAxisSensibility(sensibility);
+   for(int ii=0; ii< m_virtualJoystick.size(); ii++)
+      virtualJoystick(ii)->setAxisSensibility(sensibility);
 }
 
 /**

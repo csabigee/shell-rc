@@ -12,7 +12,7 @@
 #include <QGroupBox>
 #include <string_view>
 
-constexpr int bleControlIntervalMs = 70;
+constexpr int bleControlIntervalMs = 120;
 constexpr int lampFlashingIntervalMs = 250;
 static const QStringList validCarsBleId = {"SL-FXX-K Evo","SL-SF1000","SL-488 CHALLENGE Evo","SL-488 GTE","SL-330 P4(1967)","SL-Daytona SP3","SL-296 GTB","SL-F1-75"};
 

@@ -23,13 +23,14 @@
 #include <math.h>
 #include <QJoysticks/VirtualJoystick.h>
 
-VirtualJoystick::VirtualJoystick(QObject *parent)
+VirtualJoystick::VirtualJoystick(QString name, buttonMap map, QObject *parent)
    : QObject(parent)
 {
    m_axisRange = 1;
    m_joystickEnabled = false;
    m_joystick.blacklisted = false;
-   m_joystick.name = tr("Virtual Joystick");
+   m_joystick.name = name;
+   m_map = map;
 
    /* Initialize POVs */
    m_joystick.povs.append(0);
@@ -302,24 +303,14 @@ void VirtualJoystick::readButtons(int key, bool pressed)
       button = 0;
       resetAllAxes();
    }
-   else if (key == Qt::Key_1)
-      button = 1;
-   else if (key == Qt::Key_2)
-      button = 2;
-   else if (key == Qt::Key_3)
-      button = 3;
-   else if (key == Qt::Key_4)
+   else if (key == m_map.forward)
       button = 4;
-   else if (key == Qt::Key_5)
+   else if (key == m_map.backward)
       button = 5;
-   else if (key == Qt::Key_6)
-      button = 6;
-   else if (key == Qt::Key_7)
-      button = 7;
-   else if (key == Qt::Key_8)
-      button = 8;
-   else if (key == Qt::Key_9)
-      button = 9;
+   else if (key == m_map.steerRight)
+      button = 1;
+   else if (key == m_map.steerLeft)
+      button = 2;
 
    if (button != -1 && joystickEnabled())
    {
@@ -342,8 +333,8 @@ void VirtualJoystick::processKeyEvent(QKeyEvent *event, bool pressed)
 {
    if (joystickEnabled())
    {
-      readPOVs(event->key(), pressed);
-      readAxes(event->key(), pressed);
+      //readPOVs(event->key(), pressed);
+      //readAxes(event->key(), pressed);
       readButtons(event->key(), pressed);
    }
 }

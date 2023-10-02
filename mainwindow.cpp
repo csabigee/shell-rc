@@ -33,6 +33,8 @@ MainWindow::MainWindow(QWidget *parent)
     loRaceCars->setAlignment(Qt::AlignTop);
     loRaceCars->setContentsMargins(0,0,0,0);
 
+
+
     pbRescan = new QPushButton("Rescan");
     pbRescan->setFixedHeight(32);
     pbExit = new QPushButton();
@@ -40,8 +42,8 @@ MainWindow::MainWindow(QWidget *parent)
     pbExit->setFixedSize(32,32);
     loMain->addWidget(pbRescan,0,0,1,1,Qt::AlignLeft);
     loMain->addWidget(pbExit,0,1,1,1,Qt::AlignRight);
-    loMain->addLayout(loControllers,1,0);
-    loMain->addLayout(loRaceCars,1,1);
+    loMain->addLayout(loControllers,1,0,Qt::AlignTop);
+    loMain->addLayout(loRaceCars,1,1,Qt::AlignTop);
 
     connect(pbExit, &QPushButton::released, this, &MainWindow::close);
     connect(pbRescan,&QPushButton::released,this,&MainWindow::startReScan);
@@ -51,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(central);
 
     bleAgent = new QBluetoothDeviceDiscoveryAgent();
-    bleAgent->setLowEnergyDiscoveryTimeout(3000);
+    bleAgent->setLowEnergyDiscoveryTimeout(30000);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &MainWindow::deviceDiscovered);
 //    connect(bleAgent, qOverload<QBluetoothDeviceDiscoveryAgent::Error>(&QBluetoothDeviceDiscoveryAgent::error), this, &MainWindow::deviceScanError);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, this, &MainWindow::deviceScanError);
@@ -65,6 +67,9 @@ MainWindow::MainWindow(QWidget *parent)
     /* scan cars */
     pbRescan->setEnabled(false);
     bleAgent->start();
+
+    connect(joystickController,&QJoysticks::axisChanged, this, &MainWindow::axisAction);
+    connect(joystickController,&QJoysticks::buttonChanged, this, &MainWindow::buttonAction);
 
 }
 
@@ -135,8 +140,6 @@ void MainWindow::deviceScanFinished()
     qDebug() << "ble device scan done";
     pbRescan->setEnabled(true);
 
-    connect(joystickController,&QJoysticks::axisChanged, this, &MainWindow::axisAction);
-    connect(joystickController,&QJoysticks::buttonChanged, this, &MainWindow::buttonAction);
 }
 
 void MainWindow::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)

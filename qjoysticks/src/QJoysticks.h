@@ -86,7 +86,7 @@ public:
    Q_INVOKABLE QString getName(const int index);
 
    SDL_Joysticks *sdlJoysticks() const;
-   VirtualJoystick *virtualJoystick() const;
+   VirtualJoystick *virtualJoystick(const int index) const;
    QJoystickDevice *getInputDevice(const int index);
    QList<QJoystickDevice *> inputDevices() const;
 
@@ -114,7 +114,7 @@ private:
 
    QSettings *m_settings;
    SDL_Joysticks *m_sdlJoysticks;
-   VirtualJoystick *m_virtualJoystick;
+   QList<VirtualJoystick *>m_virtualJoystick;
 
    QList<QJoystickDevice *> m_devices;
 };

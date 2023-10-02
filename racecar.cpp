@@ -241,7 +241,7 @@ void RaceCar::batteryServiceDetailsDiscovered(QLowEnergyService::ServiceState ne
     if (newState == QLowEnergyService::ServiceDiscovered) {
         auto batteryCharacteristic = batteryService->characteristic(BATTERY_CHARACTERISTICS_UUID);
         if (batteryCharacteristic.isValid()) {
-            QLowEnergyDescriptor notification = batteryCharacteristic.descriptor(QBluetoothUuid::CharacteristicType::BatteryLevel);
+            QLowEnergyDescriptor notification = batteryCharacteristic.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
             if (notification.isValid()) {
                 batteryService->writeDescriptor(notification, QByteArray::fromHex("0100"));
                 connect(batteryService, &QLowEnergyService::characteristicChanged,
