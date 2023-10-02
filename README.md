@@ -20,7 +20,7 @@ The cars have the following features:
 ![controller_layout](https://user-images.githubusercontent.com/96885207/215869592-64300917-0e33-4351-b163-09addbdf1487.png)
 
 ## Usage
-<img src="https://user-images.githubusercontent.com/96885207/215851652-4090a1ca-239e-4263-9931-8a3c9e96c3f7.png" align="right"/>
+<img src="https://github.com/csabigee/shell-rc/assets/96885207/1bbbcc78-39e0-4efe-a813-972acff47eb0" align="right"/>
 To control the car, use the left stick for throttle and the right stick for steering. Gradually increase throttle with the left stick. Turn on or off this feature using the toggle direct drive switch. Give it a turbo boost by pressing the left trigger (L2). Just a heads up, the wheels will spin, so be prepared to make some donuts! 😊
 
 You can use multiple controllers and cars, just move the cars up and down in the list to pair them. If you need to identify the controllers, look for the red flashing indicator on the corresponding one. To flash the car's headlights, press the Flash button in the list. If you don't have a controller, you can use the virtual joystick and keyboard.
