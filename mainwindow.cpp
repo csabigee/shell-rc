@@ -26,7 +26,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     loMain = new QGridLayout();
     loMain->setContentsMargins(10,10,10,10);
-    loMain->setMargin(10);
     loControllers = new QGridLayout();
     loControllers->setAlignment(Qt::AlignTop);
     loControllers->setContentsMargins(0,0,0,0);
@@ -54,15 +53,19 @@ MainWindow::MainWindow(QWidget *parent)
     bleAgent = new QBluetoothDeviceDiscoveryAgent();
     bleAgent->setLowEnergyDiscoveryTimeout(3000);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &MainWindow::deviceDiscovered);
-    connect(bleAgent, qOverload<QBluetoothDeviceDiscoveryAgent::Error>(&QBluetoothDeviceDiscoveryAgent::error), this, &MainWindow::deviceScanError);
+//    connect(bleAgent, qOverload<QBluetoothDeviceDiscoveryAgent::Error>(&QBluetoothDeviceDiscoveryAgent::error), this, &MainWindow::deviceScanError);
+    connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, this, &MainWindow::deviceScanError);
     connect(bleAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &MainWindow::deviceScanFinished);
+
+    /* create default controllers */
+
+    /* scan controllers */
+    connect(joystickController, &QJoysticks::countChanged,this, &MainWindow::controllerDiscovered);
 
     /* scan cars */
     pbRescan->setEnabled(false);
     bleAgent->start();
 
-    /* scan controllers */
-    connect(joystickController, &QJoysticks::countChanged,this, &MainWindow::controllerDiscovered);
 }
 
 void MainWindow::startReScan()
@@ -198,6 +201,21 @@ void MainWindow::buttonAction(int js,int button, bool pressed)
             if(pressed){
                 raceCars[js]->toggleDirectDrive();
             }
+        }
+        if(button==4){
+            if(pressed){
+                raceCars[js]->setThrottle(1);
+            } else {
+                raceCars[js]->setThrottle(0);
+            }
+        }
+        if(button==5){
+            if(pressed){
+                raceCars[js]->setThrottle(-1);
+            } else {
+                raceCars[js]->setThrottle(0);
+            }
+
         }
         if(button==11){
             raceCars[js]->setLamp(pressed);

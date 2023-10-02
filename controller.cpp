@@ -10,11 +10,9 @@ Controller::Controller(QString name, QWidget *parent)
 {
     this->setFixedHeight(128);
     loOutline = new QGridLayout;
-    loOutline->setMargin(0);
     loOutline->setContentsMargins(0,0,0,0);
     gbOutline = new QGroupBox;
     loMain = new QGridLayout;
-    loMain->setMargin(0);
     loMain->setContentsMargins(8,8,8,8);
     laName = new QLabel(name);
     indicator = new Led;

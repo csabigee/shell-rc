@@ -6,6 +6,7 @@
 #include <QCommonStyle>
 #include <QGroupBox>
 #include <QCoreApplication>
+#include <QLowEnergyController>
 #include "racecar.h"
 
 QBluetoothUuid RaceCar::CONTROL_SERVICE_UUID         = QBluetoothUuid(QStringLiteral("0000fff0-0000-1000-8000-00805f9b34fb"));
@@ -20,9 +21,7 @@ RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
     gbOutline = new QGroupBox;
     loMain = new QGridLayout();
     loOutline = new QGridLayout();
-    loMain->setMargin(0);
     loMain->setContentsMargins(8,8,8,8);
-    loOutline->setMargin(0);
     loOutline->setContentsMargins(0,0,0,0);
 
     carIcon = new QLabel("");
@@ -69,12 +68,12 @@ RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
     bleTimer.setInterval(bleControlIntervalMs);
     connect(&bleTimer, &QTimer::timeout, this, &RaceCar::sendCtrl);
 
-    bleController = new QLowEnergyController(carInfo);
+    bleController = QLowEnergyController::createCentral(carInfo);
     bleController->setRemoteAddressType(QLowEnergyController::RandomAddress);
 
     connect(bleController, &QLowEnergyController::connected, this, &RaceCar::deviceConnected);
     connect(bleController, &QLowEnergyController::disconnected, this, &RaceCar::deviceDisconnected);
-    connect(bleController, qOverload<QLowEnergyController::Error>(&QLowEnergyController::error), this, &RaceCar::errorReceived);
+    connect(bleController, qOverload<QLowEnergyController::Error>(&QLowEnergyController::errorOccurred), this, &RaceCar::errorReceived);
     connect(bleController, &QLowEnergyController::serviceDiscovered, this, &RaceCar::serviceDiscovered);
     connect(bleController, &QLowEnergyController::discoveryFinished, this, &RaceCar::serviceScanDone);
 
@@ -242,7 +241,7 @@ void RaceCar::batteryServiceDetailsDiscovered(QLowEnergyService::ServiceState ne
     if (newState == QLowEnergyService::ServiceDiscovered) {
         auto batteryCharacteristic = batteryService->characteristic(BATTERY_CHARACTERISTICS_UUID);
         if (batteryCharacteristic.isValid()) {
-            QLowEnergyDescriptor notification = batteryCharacteristic.descriptor(QBluetoothUuid::ClientCharacteristicConfiguration);
+            QLowEnergyDescriptor notification = batteryCharacteristic.descriptor(QBluetoothUuid::CharacteristicType::BatteryLevel);
             if (notification.isValid()) {
                 batteryService->writeDescriptor(notification, QByteArray::fromHex("0100"));
                 connect(batteryService, &QLowEnergyService::characteristicChanged,
