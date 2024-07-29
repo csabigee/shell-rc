@@ -1,5 +1,5 @@
-QT       += core gui bluetooth
-
+QT       += core gui
+QT += bluetooth
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -16,6 +16,7 @@ DarkBlueSheet.cpp \
     led.cpp \
     main.cpp \
     mainwindow.cpp \
+    qaesencryption.cpp \
     racecar.cpp
 
 HEADERS += \
@@ -23,6 +24,7 @@ DarkBlueSheet.h \
     controller.h \
     led.h \
     mainwindow.h \
+    qaesencryption.h \
     racecar.h
 
 RESOURCES += \

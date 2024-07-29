@@ -7,12 +7,18 @@
 #include <QGroupBox>
 #include <QCoreApplication>
 #include <QLowEnergyController>
-#include "racecar.h"
+#include <cmath>
 
+#include "qaesencryption.h"
+
+#include "racecar.h"
 QBluetoothUuid RaceCar::CONTROL_SERVICE_UUID         = QBluetoothUuid(QStringLiteral("0000fff0-0000-1000-8000-00805f9b34fb"));
-QBluetoothUuid RaceCar::BATTERY_SERVICE_UUID         = QBluetoothUuid(QStringLiteral("0000180f-0000-1000-8000-00805f9b34fb"));
-QBluetoothUuid RaceCar::CONTROL_CHARACTERISTICS_UUID = QBluetoothUuid(QStringLiteral("0000fff1-0000-1000-8000-00805f9b34fb"));
-QBluetoothUuid RaceCar::BATTERY_CHARACTERISTICS_UUID = QBluetoothUuid(QStringLiteral("00002a19-0000-1000-8000-00805f9b34fb"));
+QBluetoothUuid RaceCar::CONTROL_CHARACTERISTICS_UUID = QBluetoothUuid(QStringLiteral("d44bc439-abfd-45a2-b575-925416129600"));
+
+
+
+QBluetoothUuid RaceCar::BATTERY_SERVICE_UUID         = QBluetoothUuid(QStringLiteral("00001800-0000-1000-8000-00805f9b34fb"));
+QBluetoothUuid RaceCar::BATTERY_CHARACTERISTICS_UUID = QBluetoothUuid(QStringLiteral("00001801-0000-1000-8000-00805f9b34fb"));
 
 RaceCar::RaceCar(const QBluetoothDeviceInfo &carInfo, QWidget *parent)
     : QWidget{parent}
@@ -137,40 +143,39 @@ void RaceCar::toggleDirectDrive()
 
 void RaceCar::sendCtrl()
 {
-    QByteArray data = QByteArrayLiteral("\x01\x00\x00\x00\x00\x00\x00\x00");
+    QByteArray data = QByteArrayLiteral("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00");
 
-    float resolution=4;
 
-    if(directDrive){
-        pwmCntr=0;
-    } else{
-        pwmCntr++;
-        if(pwmCntr==resolution) {
-            pwmCntr=0.0;
-        }
-    }
-
-    if (turbo)
-        data[6] = 1;
-    if (lamp)
-        data[5] = 1;
-
-    if(throttle>0) {
-        if(pwmCntr<=throttle*resolution) {
-            data[1] = 1;
-        }
-    } else if (throttle<0){
-        if(pwmCntr<=-1*throttle*resolution) {
-            data[2] = 1;
-        }
-    }
-
+    data[0]=0;
+    data[1]='C';
+    data[2]='T';
+    data[3]='L';
+    if(throttle>0)
+        data[4]=1;  // move forward
+    if(throttle<0)
+        data[5]=1;  // move backward
+    if(steering<0)
+        data[6]=1;  // turn left
     if(steering>0)
-        data[4] = 1;
-    else if(steering<0)
-        data[3] = 1;
+        data[7]=1;  // turn right
+    if(!lamp)
+        data[8]=1;  // lights
 
-    controlService->writeCharacteristic(controlCharacteristics, data, QLowEnergyService::WriteWithoutResponse);
+    float power = 100*std::abs(throttle);
+
+    data[9]=static_cast<uint8_t>(power);
+
+
+    QByteArray stopMeassage = QByteArrayLiteral("\xe1\x05\x5f\x54\xd8\x80\xf4\x9c\x2c\xe5\x47\x26\x7f\x93\x0b\xf2");
+    QByteArray startMeassage = QByteArrayLiteral("\x6e\xaa\xf0\xc0\x85\x8f\x14\x77\x6f\xd8\xf0\x71\x39\xa0\x08\xf2");
+
+    const QByteArray aesKey =  QByteArrayLiteral("\x34\x52\x2a\x5b\x7a\x6e\x49\x2c\x08\x09\x0a\x9d\x8d\x2a\x23\xf8");
+    const QByteArray startMeassagePlain =  QByteArrayLiteral("\x00\x43\x54\x4c\x00\x01\x01\x00\x00\x50\x00\x00\x00\x00\x00\x00");
+    QAESEncryption encryption(QAESEncryption::AES_128, QAESEncryption::ECB);
+    QByteArray encodedText = encryption.encode(data, aesKey);
+
+
+    controlService->writeCharacteristic(controlCharacteristics, encodedText, QLowEnergyService::WriteWithoutResponse);
     QLowEnergyService::ServiceError error = controlService->error();
     if(error!=QLowEnergyService::NoError){
         qDebug() << "Error: " << error;
@@ -207,13 +212,13 @@ void RaceCar::serviceDiscovered(const QBluetoothUuid &uuid)
         }
     }
 
-    if (uuid == BATTERY_SERVICE_UUID && batteryService == nullptr) {
+    /*if (uuid == BATTERY_SERVICE_UUID && batteryService == nullptr) {
         batteryService = bleController->createServiceObject(uuid);
         if (batteryService->state() == QLowEnergyService::DiscoveryRequired) {
             connect(batteryService, &QLowEnergyService::stateChanged, this, &RaceCar::batteryServiceDetailsDiscovered);
             batteryService->discoverDetails();
         }
-    }
+    }*/
 }
 
 void RaceCar::serviceScanDone()
@@ -228,6 +233,12 @@ void RaceCar::controlServiceDetailsDiscovered(QLowEnergyService::ServiceState ne
 
     qDebug() << "Control service discovered" << newState;
     controlCharacteristics = controlService->characteristic(CONTROL_CHARACTERISTICS_UUID);
+    QList<QLowEnergyCharacteristic> availChars = controlService->characteristics();
+    qDebug() << "available UUIDS: ";
+    for(auto it: availChars) {
+        qDebug() << it.uuid();
+    }
+
     if (controlCharacteristics.isValid()) {
         qDebug() << "Connected!";
         bleTimer.start();

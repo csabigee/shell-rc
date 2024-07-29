@@ -34,3 +34,8 @@ shell-rc.pro.user
 shell-rc.pro.user
 shell-rc.pro.user
 shell-rc.pro.user
+.qtc_clangd
+.qmake.stash
+build
+debug
+release
